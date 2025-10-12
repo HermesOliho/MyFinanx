@@ -1,48 +1,59 @@
-# my-finanx
+# MyFinanx — Gestion des finances perso (Vue 3 + Vite + Bun)
 
-This template should help get you started developing with Vue 3 in Vite.
+Application de suivi des entrées et sorties d’argent. Front en Vue 3 (Vite), styles avec Bootstrap 5, back-end et authentification via Supabase.
 
-## Recommended IDE Setup
+## Fonctionnalités
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Ajout, modification, suppression de transactions (revenus et dépenses)
+- Catégorisation des transactions (income/expense)
+- Filtrage par période et catégorie
+- Totaux et solde courant
+- Authentification Supabase (email/magic link ou OAuth)
+- Données stockées dans Supabase avec RLS (Row Level Security)
 
-## Recommended Browser Setup
+## Stack
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- Vue 3 + Vite
+- Bun (gestion des dépendances et scripts)
+- Bootstrap 5
+- Supabase (Postgres, Auth, RLS)
 
-## Type Support for `.vue` Imports in TS
+## Prérequis
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- Bun: https://bun.sh
+- Un projet Supabase: https://supabase.com
 
-## Customize configuration
+## Installation
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+1. Cloner le dépôt, puis installer les dépendances:
 
-## Project Setup
-
-```sh
+```bash
+git clone https://github.com/HermesOliho/MyFinanx.git
+cd MyFinanx
 bun install
 ```
 
-### Compile and Hot-Reload for Development
+2. Créer un projet Supabase et configurer la base de données:
+   - Créer une table `transactions` avec les colonnes:
+     - `id` (UUID, primary key, default: `gen_random_uuid()`)
+     - `user_id` (UUID, foreign key vers `auth.users.id`)
+     - `amount` (numeric)
+     - `type` (text, 'income' ou 'expense')
+     - `category` (text)
+     - `date` (timestamp)
+     - `description` (text, nullable)
+   - Activer l'extension `pgcrypto` pour les UUID.
+   - Configurer les politiques RLS pour que chaque utilisateur ne puisse accéder qu'à ses propres transactions.
+3. Configurer les variables d'environnement:
 
-```sh
-bun dev
+```bashcp .env.example .env
+# Modifier .env avec les infos de votre projet Supabase
 ```
 
-### Type-Check, Compile and Minify for Production
+4. Lancer le serveur de développement:
 
-```sh
-bun run build
+```bash
+bun run dev
 ```
 
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-bun lint
-```
+5. Accéder à l'application sur `http://localhost:5173`
