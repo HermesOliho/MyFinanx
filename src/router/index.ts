@@ -13,6 +13,18 @@ const router = createRouter({
       name: 'welcome',
       component: () => import('../views/WelcomeView.vue'),
     },
+    // Auth routes
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('../views/auth/SignupView.vue'),
+    },
+    // User's routes
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue'),
+    },
   ],
 })
 

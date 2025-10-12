@@ -1,4 +1,5 @@
 <template>
+  <PublicNavbar />
   <div class="min-vh-100 d-flex flex-column">
     <!-- Hero -->
     <section
@@ -240,5 +241,7 @@
 </template>
 
 <script setup lang="ts">
+import PublicNavbar from '@/components/PublicNavbar.vue'
+
 console.log('WelcomeView loaded')
 </script>
