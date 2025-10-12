@@ -1,7 +1,7 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
     <div class="container">
-      <router-link to="/" class="navbar-brand"> Finanx </router-link>
+      <router-link to="/" class="navbar-brand"> MyFinanx </router-link>
 
       <button
         class="navbar-toggler"
