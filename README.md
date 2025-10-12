@@ -46,7 +46,8 @@ bun install
    - Configurer les politiques RLS pour que chaque utilisateur ne puisse accéder qu'à ses propres transactions.
 3. Configurer les variables d'environnement:
 
-```bashcp .env.example .env
+```bash
+cp .env.example .env
 # Modifier .env avec les infos de votre projet Supabase
 ```
 
