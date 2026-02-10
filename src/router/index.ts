@@ -14,6 +14,27 @@ const router = createRouter({
       name: 'welcome',
       component: () => import('../views/WelcomeView.vue'),
     },
+    // Public pages
+    {
+      path: '/fonctionnalites',
+      name: 'features',
+      component: () => import('../views/FeaturesView.vue'),
+    },
+    {
+      path: '/tarifs',
+      name: 'pricing',
+      component: () => import('../views/PricingView.vue'),
+    },
+    {
+      path: '/a-propos',
+      name: 'about',
+      component: () => import('../views/AboutView.vue'),
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/ContactView.vue'),
+    },
     // Auth routes
     {
       path: '/signup',
