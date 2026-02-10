@@ -1,6 +1,16 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
+      <!-- Sidebar toggle button (mobile/tablet) -->
+      <button
+        class="btn btn-outline-light btn-sm me-2 sidebar-toggle"
+        type="button"
+        @click="emit('toggle-sidebar')"
+        aria-label="Toggle sidebar"
+      >
+        <i class="bi bi-list"></i>
+      </button>
+
       <!-- Brand -->
       <router-link to="/dashboard" class="navbar-brand"> My Finanx </router-link>
 
@@ -19,8 +29,8 @@
 
       <!-- Collapsible content -->
       <div class="collapse navbar-collapse" id="userNavbar">
-        <!-- Left menu -->
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <!-- Left menu (hidden on mobile/tablet) -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 desktop-only-menu">
           <li class="nav-item">
             <router-link
               to="/dashboard"
@@ -112,9 +122,10 @@
 
         <!-- Right side -->
         <div class="d-flex align-items-center gap-2 user-actions">
+          <!-- Quick add button (hidden on mobile/tablet) -->
           <button
             type="button"
-            class="btn btn-success btn-sm action-button"
+            class="btn btn-success btn-sm action-button desktop-only-menu"
             @click="handleQuickAdd"
             title="Ajouter une transaction"
             aria-label="Ajouter une transaction"
@@ -189,7 +200,7 @@ const props = defineProps({
   avatarUrl: { type: String, default: '' },
 })
 
-const emit = defineEmits(['logout', 'add-transaction'])
+const emit = defineEmits(['logout', 'add-transaction', 'toggle-sidebar'])
 
 const route = useRoute()
 
@@ -211,7 +222,25 @@ const handleQuickAdd = () => emit('add-transaction')
 </script>
 
 <style scoped>
+.sidebar-toggle {
+  padding: 0.25rem 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Hide sidebar toggle on desktop */
+@media (min-width: 992px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+
+/* Hide navigation menu and quick-add on mobile/tablet */
 @media (max-width: 991px) {
+  .desktop-only-menu {
+    display: none !important;
+  }
+
   .user-actions {
     width: 100%;
     flex-direction: column;
@@ -220,7 +249,6 @@ const handleQuickAdd = () => emit('add-transaction')
     padding-top: 10px;
   }
 
-  .action-button,
   .user-menu {
     width: 100%;
     justify-content: center;

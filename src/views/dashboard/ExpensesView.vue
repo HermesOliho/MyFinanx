@@ -34,6 +34,8 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
   border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 @media (max-width: 767px) {

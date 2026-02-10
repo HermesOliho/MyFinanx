@@ -346,12 +346,26 @@ onMounted(async () => {
   border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .stat-card {
   background: #ffffff;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
   border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Table responsive improvements */
+.table-responsive {
+  margin: 0;
+  border-radius: 0;
+}
+
+.table {
+  min-width: 600px; /* Minimum width to ensure table doesn't collapse */
+  margin-bottom: 0;
 }
 
 @media (max-width: 767px) {
@@ -361,6 +375,10 @@ onMounted(async () => {
 
   .header-action {
     width: 100%;
+  }
+
+  .table {
+    min-width: 500px; /* Smaller minimum on mobile */
   }
 }
 </style>

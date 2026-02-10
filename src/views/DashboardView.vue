@@ -5,11 +5,11 @@
         <div>
           <p class="text-uppercase text-primary fw-semibold small mb-2">Tableau de bord</p>
           <h1 class="h3 fw-bold mb-1">Bienvenue dans votre espace</h1>
-          <p class="text-muted mb-0">Gardez un oeil sur vos flux financiers en un coup d oeil.</p>
+          <p class="text-muted mb-0">Gardez un œil sur vos flux financiers en un coup d'œil.</p>
         </div>
         <div class="d-flex flex-column flex-sm-row gap-2">
           <RouterLink to="/incomes" class="btn btn-outline-primary">Ajouter un revenu</RouterLink>
-          <RouterLink to="/expenses" class="btn btn-primary">Ajouter une depense</RouterLink>
+          <RouterLink to="/expenses" class="btn btn-primary">Ajouter une dépense</RouterLink>
         </div>
       </div>
     </section>
@@ -28,7 +28,7 @@
               <span class="fw-semibold text-success">{{ formatCurrency(incomes.USD, 'USD') }}</span>
             </div>
             <div class="d-flex justify-content-between">
-              <span class="text-muted">Depenses</span>
+              <span class="text-muted">Dépenses</span>
               <span class="fw-semibold text-danger">{{ formatCurrency(expenses.USD, 'USD') }}</span>
             </div>
           </div>
@@ -47,7 +47,7 @@
               <span class="fw-semibold text-success">{{ formatCurrency(incomes.CDF, 'CDF') }}</span>
             </div>
             <div class="d-flex justify-content-between">
-              <span class="text-muted">Depenses</span>
+              <span class="text-muted">Dépenses</span>
               <span class="fw-semibold text-danger">{{ formatCurrency(expenses.CDF, 'CDF') }}</span>
             </div>
           </div>
@@ -57,9 +57,9 @@
 
     <section class="card border-0 shadow-sm">
       <div class="card-body">
-        <h2 class="h5 fw-semibold mb-2">Resume rapide</h2>
+        <h2 class="h5 fw-semibold mb-2">Résumé rapide</h2>
         <p class="text-muted mb-0">
-          Consultez vos modules Revenus et Depenses pour un suivi detaille, ou ajoutez une nouvelle
+          Consultez vos modules Revenus et Dépenses pour un suivi détaillé, ou ajoutez une nouvelle
           transaction depuis les raccourcis ci-dessus.
         </p>
       </div>
@@ -111,12 +111,20 @@ onMounted(async () => {
   border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .stat-card {
   background: #ffffff;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
   border-radius: 16px;
+  overflow: hidden;
+}
+
+.stat-card .card-body {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 @media (max-width: 575px) {
