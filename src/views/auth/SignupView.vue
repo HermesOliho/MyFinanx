@@ -5,8 +5,8 @@
       <div class="col-12 col-md-8 col-lg-6">
         <AuthShell>
           <div class="text-center mb-4">
-            <h1 class="h4 fw-bold mb-1">Creer un compte</h1>
-            <p class="text-muted mb-0">Demarrez en moins d une minute.</p>
+            <h1 class="h4 fw-bold mb-1">Créer un compte</h1>
+            <p class="text-muted mb-0">Démarrez en moins d une minute.</p>
           </div>
 
           <form @submit.prevent="onSubmit" novalidate>

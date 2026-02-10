@@ -2,12 +2,12 @@
   <PublicNavbar />
   <AuthShell>
     <div class="text-center mb-4">
-      <h1 class="h4 fw-bold mb-1">Mot de passe oublie</h1>
-      <p class="text-muted mb-0">Recevez un lien de reinitialisation par email.</p>
+      <h1 class="h4 fw-bold mb-1">Mot de passe oublié</h1>
+      <p class="text-muted mb-0">Recevez un lien de réinitialisation par email.</p>
     </div>
 
     <div v-if="success" class="alert alert-success" role="alert">
-      Un lien de reinitialisation vient d etre envoye a votre adresse.
+      Un lien de réinitialisation vient d’être envoyé à votre adresse.
     </div>
     <div v-if="error" class="alert alert-danger" role="alert">{{ error }}</div>
 
@@ -39,7 +39,7 @@
     </form>
 
     <div class="text-center mt-4 small">
-      <RouterLink to="/login">Retour a la connexion</RouterLink>
+      <RouterLink to="/login">Retour à la connexion</RouterLink>
     </div>
   </AuthShell>
 </template>

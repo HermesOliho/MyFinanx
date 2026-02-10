@@ -3,11 +3,11 @@
   <AuthShell>
     <div class="text-center mb-4">
       <h1 class="h4 fw-bold mb-1">Connexion</h1>
-      <p class="text-muted mb-0">Accedez a votre espace financier en toute securite.</p>
+      <p class="text-muted mb-0">Accédez à votre espace financier en toute sécurité.</p>
     </div>
 
     <div v-if="error" class="alert alert-danger" role="alert">{{ error }}</div>
-    <div v-if="success" class="alert alert-success" role="alert">Connexion reussie.</div>
+    <div v-if="success" class="alert alert-success" role="alert">Connexion réussie.</div>
 
     <form
       class="needs-validation"
@@ -53,7 +53,7 @@
             {{ showPassword ? 'Masquer' : 'Afficher' }}
           </button>
         </div>
-        <div class="invalid-feedback">Veuillez saisir votre mot de passe (min. 6 caracteres).</div>
+        <div class="invalid-feedback">Veuillez saisir votre mot de passe (min. 6 caractères).</div>
       </div>
 
       <div class="d-flex align-items-center justify-content-between mb-3">
@@ -77,7 +77,7 @@
 
     <div class="text-center mt-4 small">
       Pas encore de compte ?
-      <RouterLink to="/signup">Creer un compte</RouterLink>
+      <RouterLink to="/signup">Créer un compte</RouterLink>
     </div>
   </AuthShell>
 </template>
@@ -131,8 +131,9 @@ async function onSubmit(e: Event) {
       const redirectTarget = (route.query.redirect as string | undefined) || '/dashboard'
       router.push(redirectTarget)
     }, 500)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
-    error.value = 'Impossible de se connecter. Verifiez vos identifiants.'
+    error.value = 'Impossible de se connecter. Vérifiez vos identifiants.'
   } finally {
     loading.value = false
   }

@@ -19,28 +19,46 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div>
-    <!-- NavBar -->
+  <div class="app-shell">
     <UserNavbar :user-name="displayName" @logout="handleLogout" />
-    <!-- Contenu de la page avec la SideBar à gauche -->
-    <main>
+    <div class="app-body">
       <SideBar />
-      <div class="main-content">
+      <main class="app-content">
         <slot></slot>
-      </div>
-    </main>
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-main {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  min-height: calc(100vh - 56px); /* Ajuste la hauteur en fonction de la hauteur de la navbar */
+.app-shell {
+  background: #f8fafc;
+  min-height: 100vh;
 }
-@media screen and (max-width: 768px) {
-  main {
-    grid-template-columns: 1fr; /* Sidebar en haut sur les petits écrans */
+
+.app-body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 72px);
+}
+
+.app-content {
+  padding: 28px;
+}
+
+@media screen and (max-width: 991px) {
+  .app-body {
+    grid-template-columns: 1fr;
+  }
+
+  .app-content {
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 575px) {
+  .app-content {
+    padding: 16px;
   }
 }
 </style>

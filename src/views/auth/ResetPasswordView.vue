@@ -12,11 +12,11 @@
 
     <div v-else>
       <div v-if="!hasSession" class="alert alert-warning" role="alert">
-        Lien invalide ou expire. Demandez un nouveau lien de reinitialisation.
+        Lien invalide ou expiré. Demandez un nouveau lien de réinitialisation.
       </div>
 
       <div v-if="success" class="alert alert-success" role="alert">
-        Mot de passe mis a jour. Vous pouvez vous connecter.
+        Mot de passe mis à jour. Vous pouvez vous connecter.
       </div>
       <div v-if="error" class="alert alert-danger" role="alert">{{ error }}</div>
 
@@ -105,7 +105,7 @@ async function onSubmit() {
   success.value = false
 
   if (password.value.length < 8) {
-    error.value = 'Le mot de passe doit contenir au moins 8 caracteres.'
+    error.value = 'Le mot de passe doit contenir au moins 8 caractères.'
     return
   }
   if (password.value !== passwordConfirm.value) {

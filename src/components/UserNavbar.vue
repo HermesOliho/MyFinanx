@@ -111,10 +111,10 @@
         </ul>
 
         <!-- Right side -->
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 user-actions">
           <button
             type="button"
-            class="btn btn-success btn-sm"
+            class="btn btn-success btn-sm action-button"
             @click="handleQuickAdd"
             title="Ajouter une transaction"
             aria-label="Ajouter une transaction"
@@ -124,7 +124,7 @@
 
           <div class="dropdown">
             <button
-              class="btn btn-outline-light d-flex align-items-center gap-2"
+              class="btn btn-outline-light d-flex align-items-center gap-2 user-menu"
               type="button"
               id="userMenuButton"
               data-bs-toggle="dropdown"
@@ -209,3 +209,21 @@ const isTransactionsSection = computed(() => route.path.startsWith('/transaction
 const handleLogout = () => emit('logout')
 const handleQuickAdd = () => emit('add-transaction')
 </script>
+
+<style scoped>
+@media (max-width: 991px) {
+  .user-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .action-button,
+  .user-menu {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
