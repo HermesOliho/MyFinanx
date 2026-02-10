@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { addExpense, fetchExpenses } from '@/services/expenseService'
+import { addExpense, fetchExpenses, updateExpense, deleteExpense } from '@/services/expenseService'
 import { useAuthStore } from '@/stores/auth'
 import type { TransactionModel } from '@/models/transactionModel'
 
@@ -12,6 +12,29 @@ const loading = ref(false)
 const error = ref('')
 const submitError = ref('')
 const submitting = ref(false)
+
+// Filters and search
+const searchQuery = ref('')
+const filterCategory = ref('all')
+const filterCurrency = ref('all')
+const sortBy = ref<'date' | 'amount' | 'category'>('date')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+
+// Edit modal
+const editingExpense = ref<TransactionModel | null>(null)
+const editForm = reactive<{
+  amount: string
+  currency: 'USD' | 'CDF'
+  category: string
+  date: string
+  description: string
+}>({
+  amount: '',
+  currency: 'USD',
+  category: '',
+  date: '',
+  description: '',
+})
 
 const currencyOptions = ['USD', 'CDF'] as const
 type Currency = (typeof currencyOptions)[number]
@@ -39,8 +62,61 @@ const formatCurrency = (amount: number, currency: 'USD' | 'CDF') => {
   return currencyFormatters[currency].format(amount)
 }
 
+const categories = [
+  'Alimentation',
+  'Transport',
+  'Logement',
+  'Santé',
+  'Éducation',
+  'Loisirs',
+  'Vêtements',
+  'Services',
+  'Autre',
+]
+
+// Filtered and sorted expenses
+const filteredExpenses = computed(() => {
+  let result = expenses.value
+
+  // Search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (expense) =>
+        expense.description?.toLowerCase().includes(query) ||
+        expense.category.toLowerCase().includes(query) ||
+        expense.amount.toString().includes(query),
+    )
+  }
+
+  // Category filter
+  if (filterCategory.value !== 'all') {
+    result = result.filter((expense) => expense.category === filterCategory.value)
+  }
+
+  // Currency filter
+  if (filterCurrency.value !== 'all') {
+    result = result.filter((expense) => expense.currency === filterCurrency.value)
+  }
+
+  // Sorting
+  result = [...result].sort((a, b) => {
+    let comparison = 0
+    if (sortBy.value === 'date') {
+      comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+    } else if (sortBy.value === 'amount') {
+      comparison = a.amount - b.amount
+    } else if (sortBy.value === 'category') {
+      comparison = a.category.localeCompare(b.category)
+    }
+    return sortOrder.value === 'asc' ? comparison : -comparison
+  })
+
+  return result
+})
+
 const totalsByCurrency = computed(() => {
-  return expenses.value.reduce(
+  return filteredExpenses.value.reduce(
     (totals, item) => {
       totals[item.currency] += item.amount
       return totals
@@ -51,7 +127,7 @@ const totalsByCurrency = computed(() => {
 
 const totalMonthByCurrency = computed(() => {
   const now = new Date()
-  return expenses.value.reduce(
+  return filteredExpenses.value.reduce(
     (totals, item) => {
       const date = new Date(item.date)
       if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
@@ -65,7 +141,7 @@ const totalMonthByCurrency = computed(() => {
 
 const totalYearByCurrency = computed(() => {
   const year = new Date().getFullYear()
-  return expenses.value.reduce(
+  return filteredExpenses.value.reduce(
     (totals, item) => {
       if (new Date(item.date).getFullYear() === year) {
         totals[item.currency] += item.amount
@@ -76,7 +152,82 @@ const totalYearByCurrency = computed(() => {
   )
 })
 
-const emptyState = computed(() => !loading.value && expenses.value.length === 0)
+const emptyState = computed(() => !loading.value && filteredExpenses.value.length === 0)
+
+function toggleSort(column: 'date' | 'amount' | 'category') {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = column
+    sortOrder.value = 'desc'
+  }
+}
+
+function openEditModal(expense: TransactionModel) {
+  editingExpense.value = expense
+  editForm.amount = expense.amount.toString()
+  editForm.currency = expense.currency
+  editForm.category = expense.category
+  editForm.date = expense.date
+  editForm.description = expense.description || ''
+}
+
+function closeEditModal() {
+  editingExpense.value = null
+  editForm.amount = ''
+  editForm.currency = 'USD'
+  editForm.category = ''
+  editForm.date = ''
+  editForm.description = ''
+}
+
+async function handleUpdate() {
+  if (!editingExpense.value) return
+
+  const amountValue = Number(editForm.amount)
+  if (!amountValue || amountValue <= 0) {
+    submitError.value = 'Le montant doit être supérieur à 0.'
+    return
+  }
+
+  submitting.value = true
+  submitError.value = ''
+  try {
+    const updated = await updateExpense(editingExpense.value.id, {
+      amount: amountValue,
+      currency: editForm.currency,
+      category: editForm.category,
+      date: editForm.date,
+      description: editForm.description || undefined,
+    })
+    const index = expenses.value.findIndex((e) => e.id === updated.id)
+    if (index !== -1) {
+      expenses.value[index] = updated
+    }
+    closeEditModal()
+  } catch (err) {
+    submitError.value = 'Impossible de modifier cette dépense.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function handleDelete(expense: TransactionModel) {
+  if (
+    !confirm(
+      `Voulez-vous vraiment supprimer cette dépense de ${formatCurrency(expense.amount, expense.currency)} ?`,
+    )
+  ) {
+    return
+  }
+
+  try {
+    await deleteExpense(expense.id)
+    expenses.value = expenses.value.filter((e) => e.id !== expense.id)
+  } catch (err) {
+    error.value = 'Impossible de supprimer cette dépense.'
+  }
+}
 
 async function loadExpenses() {
   error.value = ''
@@ -296,7 +447,7 @@ onMounted(async () => {
       >
         <div>
           <h2 class="h5 fw-semibold mb-0">Historique des dépenses</h2>
-          <p class="text-muted small mb-0">Vos dépenses récentes.</p>
+          <p class="text-muted small mb-0">{{ filteredExpenses.length }} résultat(s)</p>
         </div>
         <div class="ms-md-auto d-flex align-items-center gap-2">
           <button
@@ -304,32 +455,94 @@ onMounted(async () => {
             @click="loadExpenses"
             :disabled="loading"
           >
-            Actualiser
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
           </button>
         </div>
       </div>
+
+      <!-- Filters and Search -->
+      <div class="card-body border-bottom">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">Recherche</label>
+            <input
+              type="search"
+              class="form-control"
+              v-model="searchQuery"
+              placeholder="Montant, catégorie, description..."
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Catégorie</label>
+            <select class="form-select" v-model="filterCategory">
+              <option value="all">Toutes</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Devise</label>
+            <select class="form-select" v-model="filterCurrency">
+              <option value="all">Toutes</option>
+              <option value="USD">USD</option>
+              <option value="CDF">CDF</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Trier par</label>
+            <select class="form-select" v-model="sortBy">
+              <option value="date">Date</option>
+              <option value="amount">Montant</option>
+              <option value="category">Catégorie</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="card-body p-0">
         <div v-if="error" class="alert alert-danger m-3" role="alert">{{ error }}</div>
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-danger" role="status"></div>
         </div>
         <div v-if="emptyState" class="text-center py-5 text-muted">
-          Aucune dépense enregistrée pour le moment.
+          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+          <p class="mb-0">Aucune dépense trouvée</p>
         </div>
 
-        <div v-if="!loading && expenses.length" class="table-responsive">
+        <div v-if="!loading && filteredExpenses.length" class="table-responsive">
           <table class="table align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Catégorie</th>
+                <th scope="col" class="cursor-pointer" @click="toggleSort('date')">
+                  Date
+                  <i
+                    v-if="sortBy === 'date'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
+                <th scope="col" class="cursor-pointer" @click="toggleSort('category')">
+                  Catégorie
+                  <i
+                    v-if="sortBy === 'category'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
                 <th scope="col">Description</th>
                 <th scope="col">Devise</th>
-                <th scope="col" class="text-end">Montant</th>
+                <th scope="col" class="text-end cursor-pointer" @click="toggleSort('amount')">
+                  Montant
+                  <i
+                    v-if="sortBy === 'amount'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
+                <th scope="col" class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="expense in expenses" :key="expense.id">
+              <tr v-for="expense in filteredExpenses" :key="expense.id">
                 <td>{{ new Date(expense.date).toLocaleDateString('fr-FR') }}</td>
                 <td>
                   <span class="badge rounded-pill text-bg-light border">{{
@@ -345,12 +558,92 @@ onMounted(async () => {
                 <td class="text-end fw-semibold text-danger">
                   {{ formatCurrency(expense.amount, expense.currency) }}
                 </td>
+                <td class="text-end">
+                  <button
+                    class="btn btn-sm btn-outline-primary me-1"
+                    @click="openEditModal(expense)"
+                    title="Modifier"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    @click="handleDelete(expense)"
+                    title="Supprimer"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
+
+    <!-- Edit Modal -->
+    <div v-if="editingExpense" class="modal-backdrop" @click="closeEditModal"></div>
+    <div v-if="editingExpense" class="modal d-block" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered" @click.stop>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modifier la dépense</h5>
+            <button type="button" class="btn-close" @click="closeEditModal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="handleUpdate">
+              <div v-if="submitError" class="alert alert-danger">{{ submitError }}</div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Montant</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    class="form-control"
+                    v-model="editForm.amount"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Devise</label>
+                  <select class="form-select" v-model="editForm.currency" required>
+                    <option value="USD">USD</option>
+                    <option value="CDF">CDF</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Catégorie</label>
+                  <select class="form-select" v-model="editForm.category" required>
+                    <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Date</label>
+                  <input type="date" class="form-control" v-model="editForm.date" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-control" v-model="editForm.description" rows="2"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeEditModal">Annuler</button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="handleUpdate"
+              :disabled="submitting"
+            >
+              <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </DashboardLayout>
 </template>
 
@@ -378,8 +671,32 @@ onMounted(async () => {
 }
 
 .table {
-  min-width: 600px; /* Minimum width to ensure table doesn't collapse */
+  min-width: 700px; /* Minimum width to ensure table doesn't collapse */
   margin-bottom: 0;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal.d-block {
+  z-index: 1050;
 }
 
 @media (max-width: 767px) {
@@ -392,7 +709,7 @@ onMounted(async () => {
   }
 
   .table {
-    min-width: 500px; /* Smaller minimum on mobile */
+    min-width: 600px; /* Smaller minimum on mobile */
   }
 }
 </style>

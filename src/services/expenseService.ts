@@ -51,3 +51,22 @@ export const addExpense = async (expense: NewTransaction): Promise<TransactionMo
   if (error) throw error
   return data
 }
+
+export const updateExpense = async (
+  id: number,
+  updates: Partial<Omit<TransactionModel, 'id' | 'user_id' | 'created_at'>>,
+): Promise<TransactionModel> => {
+  const { data, error } = await supabase
+    .from('transactions')
+    .update(updates)
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteExpense = async (id: number): Promise<void> => {
+  const { error } = await supabase.from('transactions').delete().eq('id', id)
+  if (error) throw error
+}

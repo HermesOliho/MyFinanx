@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { addIncome, fetchIncomes } from '@/services/incomeService'
+import { addIncome, fetchIncomes, updateIncome, deleteIncome } from '@/services/incomeService'
 import { useAuthStore } from '@/stores/auth'
 import type { TransactionModel } from '@/models/transactionModel'
 
@@ -12,6 +12,29 @@ const loading = ref(false)
 const error = ref('')
 const submitError = ref('')
 const submitting = ref(false)
+
+// Filters and search
+const searchQuery = ref('')
+const filterCategory = ref('all')
+const filterCurrency = ref('all')
+const sortBy = ref<'date' | 'amount' | 'category'>('date')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+
+// Edit modal
+const editingIncome = ref<TransactionModel | null>(null)
+const editForm = reactive<{
+  amount: string
+  currency: 'USD' | 'CDF'
+  category: string
+  date: string
+  description: string
+}>({
+  amount: '',
+  currency: 'USD',
+  category: '',
+  date: '',
+  description: '',
+})
 
 const currencyOptions = ['USD', 'CDF'] as const
 type Currency = (typeof currencyOptions)[number]
@@ -39,8 +62,51 @@ const formatCurrency = (amount: number, currency: 'USD' | 'CDF') => {
   return currencyFormatters[currency].format(amount)
 }
 
+const categories = ['Salaire', 'Freelance', 'Vente', 'Investissement', 'Autre']
+
+// Filtered and sorted incomes
+const filteredIncomes = computed(() => {
+  let result = incomes.value
+
+  // Search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (income) =>
+        income.description?.toLowerCase().includes(query) ||
+        income.category.toLowerCase().includes(query) ||
+        income.amount.toString().includes(query),
+    )
+  }
+
+  // Category filter
+  if (filterCategory.value !== 'all') {
+    result = result.filter((income) => income.category === filterCategory.value)
+  }
+
+  // Currency filter
+  if (filterCurrency.value !== 'all') {
+    result = result.filter((income) => income.currency === filterCurrency.value)
+  }
+
+  // Sorting
+  result = [...result].sort((a, b) => {
+    let comparison = 0
+    if (sortBy.value === 'date') {
+      comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+    } else if (sortBy.value === 'amount') {
+      comparison = a.amount - b.amount
+    } else if (sortBy.value === 'category') {
+      comparison = a.category.localeCompare(b.category)
+    }
+    return sortOrder.value === 'asc' ? comparison : -comparison
+  })
+
+  return result
+})
+
 const totalsByCurrency = computed(() => {
-  return incomes.value.reduce(
+  return filteredIncomes.value.reduce(
     (totals, item) => {
       totals[item.currency] += item.amount
       return totals
@@ -51,7 +117,7 @@ const totalsByCurrency = computed(() => {
 
 const totalMonthByCurrency = computed(() => {
   const now = new Date()
-  return incomes.value.reduce(
+  return filteredIncomes.value.reduce(
     (totals, item) => {
       const date = new Date(item.date)
       if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
@@ -65,7 +131,7 @@ const totalMonthByCurrency = computed(() => {
 
 const totalYearByCurrency = computed(() => {
   const year = new Date().getFullYear()
-  return incomes.value.reduce(
+  return filteredIncomes.value.reduce(
     (totals, item) => {
       if (new Date(item.date).getFullYear() === year) {
         totals[item.currency] += item.amount
@@ -76,7 +142,82 @@ const totalYearByCurrency = computed(() => {
   )
 })
 
-const emptyState = computed(() => !loading.value && incomes.value.length === 0)
+const emptyState = computed(() => !loading.value && filteredIncomes.value.length === 0)
+
+function toggleSort(column: 'date' | 'amount' | 'category') {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = column
+    sortOrder.value = 'desc'
+  }
+}
+
+function openEditModal(income: TransactionModel) {
+  editingIncome.value = income
+  editForm.amount = income.amount.toString()
+  editForm.currency = income.currency
+  editForm.category = income.category
+  editForm.date = income.date
+  editForm.description = income.description || ''
+}
+
+function closeEditModal() {
+  editingIncome.value = null
+  editForm.amount = ''
+  editForm.currency = 'USD'
+  editForm.category = ''
+  editForm.date = ''
+  editForm.description = ''
+}
+
+async function handleUpdate() {
+  if (!editingIncome.value) return
+
+  const amountValue = Number(editForm.amount)
+  if (!amountValue || amountValue <= 0) {
+    submitError.value = 'Le montant doit être supérieur à 0.'
+    return
+  }
+
+  submitting.value = true
+  submitError.value = ''
+  try {
+    const updated = await updateIncome(editingIncome.value.id, {
+      amount: amountValue,
+      currency: editForm.currency,
+      category: editForm.category,
+      date: editForm.date,
+      description: editForm.description || undefined,
+    })
+    const index = incomes.value.findIndex((i) => i.id === updated.id)
+    if (index !== -1) {
+      incomes.value[index] = updated
+    }
+    closeEditModal()
+  } catch (err) {
+    submitError.value = 'Impossible de modifier ce revenu.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function handleDelete(income: TransactionModel) {
+  if (
+    !confirm(
+      `Voulez-vous vraiment supprimer ce revenu de ${formatCurrency(income.amount, income.currency)} ?`,
+    )
+  ) {
+    return
+  }
+
+  try {
+    await deleteIncome(income.id)
+    incomes.value = incomes.value.filter((i) => i.id !== income.id)
+  } catch (err) {
+    error.value = 'Impossible de supprimer ce revenu.'
+  }
+}
 
 async function loadIncomes() {
   error.value = ''
@@ -288,36 +429,98 @@ onMounted(async () => {
       >
         <div>
           <h2 class="h5 fw-semibold mb-0">Historique des revenus</h2>
-          <p class="text-muted small mb-0">Vos recettes les plus récentes.</p>
+          <p class="text-muted small mb-0">{{ filteredIncomes.length }} résultat(s)</p>
         </div>
         <div class="ms-md-auto d-flex align-items-center gap-2">
           <button class="btn btn-outline-secondary btn-sm" @click="loadIncomes" :disabled="loading">
-            Actualiser
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
           </button>
         </div>
       </div>
+
+      <!-- Filters and Search -->
+      <div class="card-body border-bottom">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">Recherche</label>
+            <input
+              type="search"
+              class="form-control"
+              v-model="searchQuery"
+              placeholder="Montant, catégorie, description..."
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Catégorie</label>
+            <select class="form-select" v-model="filterCategory">
+              <option value="all">Toutes</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Devise</label>
+            <select class="form-select" v-model="filterCurrency">
+              <option value="all">Toutes</option>
+              <option value="USD">USD</option>
+              <option value="CDF">CDF</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Trier par</label>
+            <select class="form-select" v-model="sortBy">
+              <option value="date">Date</option>
+              <option value="amount">Montant</option>
+              <option value="category">Catégorie</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="card-body p-0">
         <div v-if="error" class="alert alert-danger m-3" role="alert">{{ error }}</div>
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
         </div>
         <div v-if="emptyState" class="text-center py-5 text-muted">
-          Aucun revenu enregistre pour le moment.
+          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+          <p class="mb-0">Aucun revenu trouvé</p>
         </div>
 
-        <div v-if="!loading && incomes.length" class="table-responsive">
+        <div v-if="!loading && filteredIncomes.length" class="table-responsive">
           <table class="table align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Catégorie</th>
+                <th scope="col" class="cursor-pointer" @click="toggleSort('date')">
+                  Date
+                  <i
+                    v-if="sortBy === 'date'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
+                <th scope="col" class="cursor-pointer" @click="toggleSort('category')">
+                  Catégorie
+                  <i
+                    v-if="sortBy === 'category'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
                 <th scope="col">Description</th>
                 <th scope="col">Devise</th>
-                <th scope="col" class="text-end">Montant</th>
+                <th scope="col" class="text-end cursor-pointer" @click="toggleSort('amount')">
+                  Montant
+                  <i
+                    v-if="sortBy === 'amount'"
+                    :class="sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    class="bi ms-1"
+                  ></i>
+                </th>
+                <th scope="col" class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="income in incomes" :key="income.id">
+              <tr v-for="income in filteredIncomes" :key="income.id">
                 <td>{{ new Date(income.date).toLocaleDateString('fr-FR') }}</td>
                 <td>
                   <span class="badge rounded-pill text-bg-light border">{{ income.category }}</span>
@@ -331,12 +534,92 @@ onMounted(async () => {
                 <td class="text-end fw-semibold text-success">
                   {{ formatCurrency(income.amount, income.currency) }}
                 </td>
+                <td class="text-end">
+                  <button
+                    class="btn btn-sm btn-outline-primary me-1"
+                    @click="openEditModal(income)"
+                    title="Modifier"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    @click="handleDelete(income)"
+                    title="Supprimer"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
+
+    <!-- Edit Modal -->
+    <div v-if="editingIncome" class="modal-backdrop" @click="closeEditModal"></div>
+    <div v-if="editingIncome" class="modal d-block" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered" @click.stop>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modifier le revenu</h5>
+            <button type="button" class="btn-close" @click="closeEditModal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="handleUpdate">
+              <div v-if="submitError" class="alert alert-danger">{{ submitError }}</div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Montant</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    class="form-control"
+                    v-model="editForm.amount"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Devise</label>
+                  <select class="form-select" v-model="editForm.currency" required>
+                    <option value="USD">USD</option>
+                    <option value="CDF">CDF</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Catégorie</label>
+                  <select class="form-select" v-model="editForm.category" required>
+                    <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Date</label>
+                  <input type="date" class="form-control" v-model="editForm.date" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-control" v-model="editForm.description" rows="2"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeEditModal">Annuler</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="handleUpdate"
+              :disabled="submitting"
+            >
+              <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </DashboardLayout>
 </template>
 
@@ -364,8 +647,32 @@ onMounted(async () => {
 }
 
 .table {
-  min-width: 600px; /* Minimum width to ensure table doesn't collapse */
+  min-width: 700px; /* Minimum width to ensure table doesn't collapse */
   margin-bottom: 0;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal.d-block {
+  z-index: 1050;
 }
 
 @media (max-width: 767px) {
@@ -378,7 +685,7 @@ onMounted(async () => {
   }
 
   .table {
-    min-width: 500px; /* Smaller minimum on mobile */
+    min-width: 600px; /* Smaller minimum on mobile */
   }
 }
 </style>
