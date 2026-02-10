@@ -78,6 +78,12 @@ const router = createRouter({
       component: () => import('../views/dashboard/IncomesView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/statistics',
+      name: 'statistics',
+      component: () => import('../views/dashboard/StatisticsView.vue'),
+      meta: { requiresAuth: true },
+    },
     // Catch all route - 404 Not Found
     {
       path: '/:catchAll(.*)',

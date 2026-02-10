@@ -69,14 +69,15 @@ const emit = defineEmits(['close'])
           </RouterLink>
         </li>
         <li>
-          <a href="#" class="nav-link" @click="pageStore.setModuleTitle('Rapports')">
-            <i class="bi bi-bar-chart-line me-2"></i>Rapports
-          </a>
-        </li>
-        <li>
-          <a href="#" class="nav-link" @click="pageStore.setModuleTitle('Statistiques')">
+          <RouterLink
+            :to="{ name: 'statistics' }"
+            class="nav-link"
+            :class="{ active: route.name === 'statistics' }"
+            :aria-current="{ active: route.name === 'statistics' ? 'page' : null }"
+            @click="pageStore.setModuleTitle('Statistiques')"
+          >
             <i class="bi bi-pie-chart me-2"></i>Statistiques
-          </a>
+          </RouterLink>
         </li>
       </ul>
       <div class="sidebar-footer mt-auto">
