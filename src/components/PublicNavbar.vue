@@ -42,9 +42,15 @@
           </li>
         </ul>
 
-        <div class="d-flex">
+        <div class="d-flex" v-if="!isAuthenticated">
           <router-link to="/login" class="btn btn-outline-primary me-2"> Connexion </router-link>
           <router-link :to="{ name: 'signup' }" class="btn btn-primary"> Inscription </router-link>
+        </div>
+        <div class="d-flex align-items-center gap-2" v-else>
+          <router-link to="/dashboard" class="btn btn-outline-primary">
+            Tableau de bord
+          </router-link>
+          <button class="btn btn-primary" type="button" @click="handleLogout">Deconnexion</button>
         </div>
       </div>
     </div>
@@ -52,5 +58,19 @@
 </template>
 
 <script setup lang="ts">
-// Navbar publique pour visiteurs non authentifiés (Vue 3 + Vue Router + Bootstrap 5)
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { computed } from 'vue'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+async function handleLogout() {
+  const { error } = await authStore.signOut()
+  if (!error) {
+    router.push({ name: 'login' })
+  }
+}
 </script>
