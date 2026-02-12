@@ -535,6 +535,9 @@ const getProgressBarClass = (index: number) => {
 const loadData = async () => {
   loading.value = true
   try {
+    if (!authStore.ready) {
+      await authStore.init()
+    }
     const userId = authStore.user?.id
 
     // Load all data in parallel
@@ -569,6 +572,20 @@ const loadData = async () => {
     incomeCategoriesUSD.value = incomeUsd
     incomeCategoriesCDF.value = incomeCdf
     currencyStats.value = currencyStat
+
+    if (expenseCategoriesUSD.value.length === 0 && expenseCategoriesCDF.value.length > 0) {
+      expenseCurrencyTab.value = 'CDF'
+      expensePieCurrencyTab.value = 'CDF'
+    } else if (expenseCategoriesUSD.value.length > 0) {
+      expenseCurrencyTab.value = 'USD'
+      expensePieCurrencyTab.value = 'USD'
+    }
+
+    if (incomeCategoriesUSD.value.length === 0 && incomeCategoriesCDF.value.length > 0) {
+      incomeCurrencyTab.value = 'CDF'
+    } else if (incomeCategoriesUSD.value.length > 0) {
+      incomeCurrencyTab.value = 'USD'
+    }
 
     // Wait for DOM to be ready
     await nextTick()
@@ -802,8 +819,11 @@ watch(expensePieCurrencyTab, () => {
   renderExpensePieChart()
 })
 
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  if (!authStore.ready) {
+    await authStore.init()
+  }
+  await loadData()
 })
 </script>
 
