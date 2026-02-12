@@ -37,34 +37,41 @@ function toggleSidebar() {
 
 <style scoped>
 .app-shell {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8fafc 100%);
   min-height: 100vh;
-  overflow-x: hidden;
-  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
 }
 
 .app-body {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  min-height: calc(100vh - 72px);
+  display: flex;
+  flex: 1;
+  overflow: hidden;
   position: relative;
-  overflow-x: hidden;
 }
 
 .app-content {
-  padding: 28px;
-  transition: margin-left 0.3s ease;
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
   overflow-x: hidden;
-  max-width: 100%;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.app-content.sidebar-closed {
+  margin-left: 0;
 }
 
 @media screen and (max-width: 991px) {
   .app-body {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .app-content {
-    padding: 20px;
+    padding: 24px;
     margin-left: 0;
   }
 

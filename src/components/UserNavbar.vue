@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-navbar">
     <div class="container-fluid">
       <!-- Sidebar toggle button (mobile/tablet) -->
       <button
@@ -222,6 +222,14 @@ const handleQuickAdd = () => emit('add-transaction')
 </script>
 
 <style scoped>
+.sticky-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
 .sidebar-toggle {
   padding: 0.25rem 0.5rem;
   font-size: 1.25rem;

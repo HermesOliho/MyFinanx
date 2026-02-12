@@ -96,16 +96,18 @@ const emit = defineEmits(['close'])
 }
 
 .sidebar {
-  min-height: calc(100vh - 72px);
   background: #ffffff;
   padding: 20px;
   border-right: 1px solid rgba(148, 163, 184, 0.2);
   display: flex;
   flex-direction: column;
   width: 260px;
-  transition: transform 0.3s ease;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-close-btn {
@@ -161,8 +163,10 @@ const emit = defineEmits(['close'])
 /* Desktop: hide sidebar when closed */
 @media (min-width: 992px) {
   .sidebar:not(.open) {
-    transform: translateX(-100%);
-    position: absolute;
+    width: 0;
+    padding: 0;
+    border-right: none;
+    overflow: hidden;
   }
 }
 
