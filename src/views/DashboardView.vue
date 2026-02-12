@@ -8,8 +8,10 @@
           <p class="text-muted mb-0">Gardez un œil sur vos flux financiers en un coup d'œil.</p>
         </div>
         <div class="d-flex flex-column flex-sm-row gap-2">
-          <RouterLink to="/incomes" class="btn btn-outline-primary">Ajouter un revenu</RouterLink>
-          <RouterLink to="/expenses" class="btn btn-primary">Ajouter une dépense</RouterLink>
+          <RouterLink to="/incomes/new" class="btn btn-outline-primary">
+            Ajouter un revenu
+          </RouterLink>
+          <RouterLink to="/expenses/new" class="btn btn-primary">Ajouter une dépense</RouterLink>
         </div>
       </div>
     </section>

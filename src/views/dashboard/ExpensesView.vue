@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { addExpense, fetchExpenses, updateExpense, deleteExpense } from '@/services/expenseService'
+import { fetchExpenses, updateExpense, deleteExpense } from '@/services/expenseService'
 import { useAuthStore } from '@/stores/auth'
 import type { TransactionModel } from '@/models/transactionModel'
 
@@ -33,23 +34,6 @@ const editForm = reactive<{
   currency: 'USD',
   category: '',
   date: '',
-  description: '',
-})
-
-const currencyOptions = ['USD', 'CDF'] as const
-type Currency = (typeof currencyOptions)[number]
-
-const form = reactive<{
-  amount: string
-  currency: Currency
-  category: string
-  date: string
-  description: string
-}>({
-  amount: '',
-  currency: 'USD',
-  category: 'Alimentation',
-  date: new Date().toISOString().slice(0, 10),
   description: '',
 })
 
@@ -243,45 +227,6 @@ async function loadExpenses() {
   }
 }
 
-async function handleSubmit() {
-  submitError.value = ''
-  const userId = authStore.user?.id
-  if (!userId) {
-    submitError.value = 'Veuillez vous reconnecter pour ajouter une dépense.'
-    return
-  }
-
-  const amountValue = Number(form.amount)
-  if (!amountValue || amountValue <= 0) {
-    submitError.value = 'Le montant doit être supérieur à 0.'
-    return
-  }
-
-  submitting.value = true
-  try {
-    const newExpense = await addExpense({
-      user_id: userId,
-      amount: amountValue,
-      currency: form.currency,
-      type: 'expense',
-      category: form.category,
-      date: form.date,
-      description: form.description || undefined,
-    })
-    expenses.value = [newExpense, ...expenses.value]
-    form.amount = ''
-    form.currency = 'USD'
-    form.category = 'Alimentation'
-    form.date = new Date().toISOString().slice(0, 10)
-    form.description = ''
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
-    submitError.value = "Impossible d'ajouter cette dépense. Veuillez réessayer."
-  } finally {
-    submitting.value = false
-  }
-}
-
 onMounted(async () => {
   await authStore.init()
   await loadExpenses()
@@ -297,14 +242,9 @@ onMounted(async () => {
           <h1 class="h3 fw-bold mb-1">Gardez le contrôle de vos sorties</h1>
           <p class="text-muted mb-0">Suivi clair des charges et postes de dépenses.</p>
         </div>
-        <button
-          class="btn btn-danger header-action"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#expenseForm"
-        >
+        <RouterLink :to="{ name: 'expense-new' }" class="btn btn-danger header-action">
           <i class="bi bi-plus-circle me-2"></i>Ajouter une dépense
-        </button>
+        </RouterLink>
       </div>
     </section>
 
@@ -364,79 +304,6 @@ onMounted(async () => {
               </span>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="expenseForm" class="collapse mb-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 fw-semibold mb-3">Nouvelle dépense</h2>
-          <form class="row g-3" @submit.prevent="handleSubmit">
-            <div v-if="submitError" class="col-12">
-              <div class="alert alert-danger" role="alert">{{ submitError }}</div>
-            </div>
-
-            <div class="col-md-6">
-              <label for="amount" class="form-label">Montant</label>
-              <input
-                type="number"
-                step="0.01"
-                class="form-control"
-                id="amount"
-                v-model="form.amount"
-                required
-                placeholder="0.00"
-              />
-            </div>
-
-            <div class="col-md-6">
-              <label for="currency" class="form-label">Devise</label>
-              <select class="form-select" id="currency" v-model="form.currency" required>
-                <option v-for="curr in currencyOptions" :key="curr" :value="curr">
-                  {{ curr }}
-                </option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label for="category" class="form-label">Catégorie</label>
-              <select class="form-select" id="category" v-model="form.category" required>
-                <option value="Alimentation">Alimentation</option>
-                <option value="Transport">Transport</option>
-                <option value="Logement">Logement</option>
-                <option value="Santé">Santé</option>
-                <option value="Éducation">Éducation</option>
-                <option value="Loisirs">Loisirs</option>
-                <option value="Vêtements">Vêtements</option>
-                <option value="Services">Services</option>
-                <option value="Autre">Autre</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label for="date" class="form-label">Date</label>
-              <input type="date" class="form-control" id="date" v-model="form.date" required />
-            </div>
-
-            <div class="col-12">
-              <label for="description" class="form-label">Description (facultatif)</label>
-              <textarea
-                class="form-control"
-                id="description"
-                v-model="form.description"
-                rows="2"
-                placeholder="Note ou détail supplémentaire..."
-              ></textarea>
-            </div>
-
-            <div class="col-12">
-              <button type="submit" class="btn btn-danger" :disabled="submitting">
-                <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
-                {{ submitting ? 'Enregistrement...' : 'Enregistrer la dépense' }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </section>

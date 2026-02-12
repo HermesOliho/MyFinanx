@@ -73,9 +73,21 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/expenses/new',
+      name: 'expense-new',
+      component: () => import('../views/dashboard/AddExpenseView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/incomes',
       name: 'incomes',
       component: () => import('../views/dashboard/IncomesView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/incomes/new',
+      name: 'income-new',
+      component: () => import('../views/dashboard/AddIncomeView.vue'),
       meta: { requiresAuth: true },
     },
     {

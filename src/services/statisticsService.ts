@@ -44,6 +44,7 @@ export interface StatisticsSummary {
 export const getMonthlyStatistics = async (
   userId?: string,
   months: number = 6,
+  currency?: 'USD' | 'CDF',
 ): Promise<MonthlyData[]> => {
   const startDate = new Date()
   startDate.setMonth(startDate.getMonth() - months)
@@ -56,6 +57,10 @@ export const getMonthlyStatistics = async (
 
   if (userId) {
     query = query.eq('user_id', userId)
+  }
+
+  if (currency) {
+    query = query.eq('currency', currency)
   }
 
   const { data, error } = await query
@@ -108,11 +113,16 @@ export const getMonthlyStatistics = async (
 export const getCategoryStatistics = async (
   userId?: string,
   type: 'income' | 'expense' = 'expense',
+  currency?: 'USD' | 'CDF',
 ): Promise<CategoryData[]> => {
   let query = supabase.from('transactions').select('*').eq('type', type)
 
   if (userId) {
     query = query.eq('user_id', userId)
+  }
+
+  if (currency) {
+    query = query.eq('currency', currency)
   }
 
   const { data, error } = await query

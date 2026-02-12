@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import { addIncome, fetchIncomes, updateIncome, deleteIncome } from '@/services/incomeService'
+import { fetchIncomes, updateIncome, deleteIncome } from '@/services/incomeService'
 import { useAuthStore } from '@/stores/auth'
 import type { TransactionModel } from '@/models/transactionModel'
 
@@ -33,23 +34,6 @@ const editForm = reactive<{
   currency: 'USD',
   category: '',
   date: '',
-  description: '',
-})
-
-const currencyOptions = ['USD', 'CDF'] as const
-type Currency = (typeof currencyOptions)[number]
-
-const form = reactive<{
-  amount: string
-  currency: Currency
-  category: string
-  date: string
-  description: string
-}>({
-  amount: '',
-  currency: 'USD',
-  category: 'Salaire',
-  date: new Date().toISOString().slice(0, 10),
   description: '',
 })
 
@@ -233,45 +217,6 @@ async function loadIncomes() {
   }
 }
 
-async function handleSubmit() {
-  submitError.value = ''
-  const userId = authStore.user?.id
-  if (!userId) {
-    submitError.value = 'Veuillez vous reconnecter pour ajouter un revenu.'
-    return
-  }
-
-  const amountValue = Number(form.amount)
-  if (!amountValue || amountValue <= 0) {
-    submitError.value = 'Le montant doit être supérieur a 0.'
-    return
-  }
-
-  submitting.value = true
-  try {
-    const newIncome = await addIncome({
-      user_id: userId,
-      amount: amountValue,
-      currency: form.currency,
-      type: 'income',
-      category: form.category,
-      date: form.date,
-      description: form.description || undefined,
-    })
-    incomes.value = [newIncome, ...incomes.value]
-    form.amount = ''
-    form.currency = 'USD'
-    form.category = 'Salaire'
-    form.date = new Date().toISOString().slice(0, 10)
-    form.description = ''
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
-    submitError.value = "Impossible d'ajouter ce revenu. Veuillez réessayer."
-  } finally {
-    submitting.value = false
-  }
-}
-
 onMounted(async () => {
   await authStore.init()
   await loadIncomes()
@@ -287,14 +232,9 @@ onMounted(async () => {
           <h1 class="h3 fw-bold mb-1">Pilotez vos recettes</h1>
           <p class="text-muted mb-0">Suivez vos revenus et alimentez votre budget facilement.</p>
         </div>
-        <button
-          class="btn btn-primary header-action"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#incomeForm"
-        >
+        <RouterLink :to="{ name: 'income-new' }" class="btn btn-primary header-action">
           <i class="bi bi-plus-circle me-2"></i>Ajouter un revenu
-        </button>
+        </RouterLink>
       </div>
     </section>
 
@@ -350,75 +290,6 @@ onMounted(async () => {
               </span>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="incomeForm" class="collapse mb-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 fw-semibold mb-3">Nouveau revenu</h2>
-          <form class="row g-3" @submit.prevent="handleSubmit">
-            <div class="col-12 col-lg-4">
-              <label class="form-label" for="amount">Montant</label>
-              <div class="input-group">
-                <span class="input-group-text">{{ form.currency }}</span>
-                <input
-                  id="amount"
-                  v-model="form.amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  class="form-control"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-            </div>
-            <div class="col-12 col-lg-4">
-              <label class="form-label" for="currency">Devise</label>
-              <select id="currency" v-model="form.currency" class="form-select" required>
-                <option value="USD">USD</option>
-                <option value="CDF">CDF</option>
-              </select>
-            </div>
-            <div class="col-12 col-lg-4">
-              <label class="form-label" for="category">Categorie</label>
-              <select id="category" v-model="form.category" class="form-select" required>
-                <option>Salaire</option>
-                <option>Freelance</option>
-                <option>Vente</option>
-                <option>Investissement</option>
-                <option>Autre</option>
-              </select>
-            </div>
-            <div class="col-12 col-lg-4">
-              <label class="form-label" for="date">Date</label>
-              <input id="date" v-model="form.date" type="date" class="form-control" required />
-            </div>
-            <div class="col-12">
-              <label class="form-label" for="description">Description</label>
-              <input
-                id="description"
-                v-model="form.description"
-                type="text"
-                class="form-control"
-                placeholder="Prime, bonus, remboursement..."
-              />
-            </div>
-            <div class="col-12 d-flex flex-column flex-md-row gap-3 align-items-md-center">
-              <button class="btn btn-primary" type="submit" :disabled="submitting">
-                <span
-                  v-if="submitting"
-                  class="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                Enregistrer
-              </button>
-              <span v-if="submitError" class="text-danger small">{{ submitError }}</span>
-            </div>
-          </form>
         </div>
       </div>
     </section>

@@ -114,15 +114,35 @@
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
               <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
                   <h5 class="fw-bold mb-0">
                     <i class="bi bi-graph-up me-2 text-primary"></i>
                     Évolution mensuelle
                   </h5>
-                  <span class="badge bg-light text-dark">{{ selectedPeriod }} mois</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark">{{ selectedPeriod }} mois</span>
+                    <div class="nav nav-pills small" role="tablist">
+                      <button
+                        class="nav-link"
+                        :class="{ active: monthlyCurrencyTab === 'USD' }"
+                        type="button"
+                        @click="monthlyCurrencyTab = 'USD'"
+                      >
+                        USD
+                      </button>
+                      <button
+                        class="nav-link"
+                        :class="{ active: monthlyCurrencyTab === 'CDF' }"
+                        type="button"
+                        @click="monthlyCurrencyTab = 'CDF'"
+                      >
+                        CDF
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div class="chart-container" style="position: relative; height: 300px">
-                  <canvas v-if="monthlyData.length > 0" ref="monthlyChartRef"></canvas>
+                  <canvas v-if="currentMonthlyData.length > 0" ref="monthlyChartRef"></canvas>
                   <div v-else class="d-flex align-items-center justify-content-center h-100">
                     <div class="text-center text-muted">
                       <i class="bi bi-graph-up fs-1"></i>
@@ -138,14 +158,35 @@
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
               <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
                   <h5 class="fw-bold mb-0">
                     <i class="bi bi-pie-chart-fill me-2 text-danger"></i>
                     Dépenses par catégorie
                   </h5>
+                  <div class="nav nav-pills small" role="tablist">
+                    <button
+                      class="nav-link"
+                      :class="{ active: expensePieCurrencyTab === 'USD' }"
+                      type="button"
+                      @click="expensePieCurrencyTab = 'USD'"
+                    >
+                      USD
+                    </button>
+                    <button
+                      class="nav-link"
+                      :class="{ active: expensePieCurrencyTab === 'CDF' }"
+                      type="button"
+                      @click="expensePieCurrencyTab = 'CDF'"
+                    >
+                      CDF
+                    </button>
+                  </div>
                 </div>
                 <div class="chart-container" style="position: relative; height: 300px">
-                  <canvas v-if="expenseCategories.length > 0" ref="expensePieChartRef"></canvas>
+                  <canvas
+                    v-if="currentExpensePieCategories.length > 0"
+                    ref="expensePieChartRef"
+                  ></canvas>
                   <div v-else class="d-flex align-items-center justify-content-center h-100">
                     <div class="text-center text-muted">
                       <i class="bi bi-pie-chart fs-1"></i>
@@ -164,17 +205,37 @@
           <div class="col-lg-6">
             <div class="card border-0 shadow-sm">
               <div class="card-body p-4">
-                <h5 class="fw-bold mb-4">
-                  <i class="bi bi-arrow-down-circle me-2 text-danger"></i>
-                  Top catégories de dépenses
-                </h5>
-                <div v-if="expenseCategories.length === 0" class="text-center py-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+                  <h5 class="fw-bold mb-0">
+                    <i class="bi bi-arrow-down-circle me-2 text-danger"></i>
+                    Top categories de depenses
+                  </h5>
+                  <div class="nav nav-pills small" role="tablist">
+                    <button
+                      class="nav-link"
+                      :class="{ active: expenseCurrencyTab === 'USD' }"
+                      type="button"
+                      @click="expenseCurrencyTab = 'USD'"
+                    >
+                      USD
+                    </button>
+                    <button
+                      class="nav-link"
+                      :class="{ active: expenseCurrencyTab === 'CDF' }"
+                      type="button"
+                      @click="expenseCurrencyTab = 'CDF'"
+                    >
+                      CDF
+                    </button>
+                  </div>
+                </div>
+                <div v-if="currentExpenseCategories.length === 0" class="text-center py-4">
                   <i class="bi bi-inbox text-muted fs-1"></i>
-                  <p class="text-muted mt-2">Aucune dépense enregistrée</p>
+                  <p class="text-muted mt-2">Aucune depense enregistree</p>
                 </div>
                 <div v-else class="d-flex flex-column gap-3">
                   <div
-                    v-for="(cat, index) in expenseCategories.slice(0, 5)"
+                    v-for="(cat, index) in currentExpenseCategories.slice(0, 5)"
                     :key="index"
                     class="d-flex align-items-center"
                   >
@@ -192,7 +253,9 @@
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <small class="text-muted">{{ cat.count }} transactions</small>
-                        <small class="fw-semibold">{{ formatCurrency(cat.amount, 'USD') }}</small>
+                        <small class="fw-semibold">
+                          {{ formatCurrency(cat.amount, expenseCurrencyTab) }}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -205,17 +268,37 @@
           <div class="col-lg-6">
             <div class="card border-0 shadow-sm">
               <div class="card-body p-4">
-                <h5 class="fw-bold mb-4">
-                  <i class="bi bi-arrow-up-circle me-2 text-success"></i>
-                  Top catégories de revenus
-                </h5>
-                <div v-if="incomeCategories.length === 0" class="text-center py-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+                  <h5 class="fw-bold mb-0">
+                    <i class="bi bi-arrow-up-circle me-2 text-success"></i>
+                    Top categories de revenus
+                  </h5>
+                  <div class="nav nav-pills small" role="tablist">
+                    <button
+                      class="nav-link"
+                      :class="{ active: incomeCurrencyTab === 'USD' }"
+                      type="button"
+                      @click="incomeCurrencyTab = 'USD'"
+                    >
+                      USD
+                    </button>
+                    <button
+                      class="nav-link"
+                      :class="{ active: incomeCurrencyTab === 'CDF' }"
+                      type="button"
+                      @click="incomeCurrencyTab = 'CDF'"
+                    >
+                      CDF
+                    </button>
+                  </div>
+                </div>
+                <div v-if="currentIncomeCategories.length === 0" class="text-center py-4">
                   <i class="bi bi-inbox text-muted fs-1"></i>
-                  <p class="text-muted mt-2">Aucun revenu enregistré</p>
+                  <p class="text-muted mt-2">Aucun revenu enregistre</p>
                 </div>
                 <div v-else class="d-flex flex-column gap-3">
                   <div
-                    v-for="(cat, index) in incomeCategories.slice(0, 5)"
+                    v-for="(cat, index) in currentIncomeCategories.slice(0, 5)"
                     :key="index"
                     class="d-flex align-items-center"
                   >
@@ -232,7 +315,9 @@
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <small class="text-muted">{{ cat.count }} transactions</small>
-                        <small class="fw-semibold">{{ formatCurrency(cat.amount, 'USD') }}</small>
+                        <small class="fw-semibold">
+                          {{ formatCurrency(cat.amount, incomeCurrencyTab) }}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -314,43 +399,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Debug Info (temporary) -->
-        <div class="row g-4 mt-2">
-          <div class="col-12">
-            <div class="card border-warning bg-warning-subtle">
-              <div class="card-body p-3">
-                <h6 class="fw-bold mb-2">
-                  <i class="bi bi-bug me-2"></i>
-                  Informations de débogage
-                </h6>
-                <div class="row g-2 small">
-                  <div class="col-md-3">
-                    <strong>Données mensuelles:</strong> {{ monthlyData.length }} mois
-                  </div>
-                  <div class="col-md-3">
-                    <strong>Catégories dépenses:</strong> {{ expenseCategories.length }}
-                  </div>
-                  <div class="col-md-3">
-                    <strong>Catégories revenus:</strong> {{ incomeCategories.length }}
-                  </div>
-                  <div class="col-md-3">
-                    <strong>Données devises:</strong> {{ hasCurrencyData ? 'Oui' : 'Non' }}
-                  </div>
-                  <div class="col-12 mt-2">
-                    <strong>Canvas refs:</strong>
-                    Monthly: {{ !!monthlyChartRef ? '✓' : '✗' }} | Expense:
-                    {{ !!expensePieChartRef ? '✓' : '✗' }} | Currency:
-                    {{ !!currencyChartRef ? '✓' : '✗' }}
-                  </div>
-                  <div class="col-12 mt-1 text-muted">
-                    Vérifiez la console du navigateur (F12) pour plus de détails
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </DashboardLayout>
@@ -422,9 +470,13 @@ const summary = ref<StatisticsSummary>({
   averageExpenseCDF: 0,
 })
 
-const monthlyData = ref<MonthlyData[]>([])
+const monthlyDataUSD = ref<MonthlyData[]>([])
+const monthlyDataCDF = ref<MonthlyData[]>([])
 const expenseCategories = ref<CategoryData[]>([])
-const incomeCategories = ref<CategoryData[]>([])
+const expenseCategoriesUSD = ref<CategoryData[]>([])
+const expenseCategoriesCDF = ref<CategoryData[]>([])
+const incomeCategoriesUSD = ref<CategoryData[]>([])
+const incomeCategoriesCDF = ref<CategoryData[]>([])
 const currencyStats = ref<CurrencyStats[]>([])
 
 // Chart refs
@@ -439,6 +491,31 @@ let currencyChart: Chart | null = null
 // Computed properties
 const hasCurrencyData = computed(() => {
   return currencyStats.value.some((stat) => stat.totalIncome > 0 || stat.totalExpense > 0)
+})
+
+const monthlyCurrencyTab = ref<'USD' | 'CDF'>('USD')
+const expenseCurrencyTab = ref<'USD' | 'CDF'>('USD')
+const expensePieCurrencyTab = ref<'USD' | 'CDF'>('USD')
+const incomeCurrencyTab = ref<'USD' | 'CDF'>('USD')
+
+const currentMonthlyData = computed(() => {
+  return monthlyCurrencyTab.value === 'USD' ? monthlyDataUSD.value : monthlyDataCDF.value
+})
+
+const currentExpenseCategories = computed(() => {
+  return expenseCurrencyTab.value === 'USD'
+    ? expenseCategoriesUSD.value
+    : expenseCategoriesCDF.value
+})
+
+const currentIncomeCategories = computed(() => {
+  return incomeCurrencyTab.value === 'USD' ? incomeCategoriesUSD.value : incomeCategoriesCDF.value
+})
+
+const currentExpensePieCategories = computed(() => {
+  return expensePieCurrencyTab.value === 'USD'
+    ? expenseCategoriesUSD.value
+    : expenseCategoriesCDF.value
 })
 
 const formatCurrency = (amount: number, currency: 'USD' | 'CDF') => {
@@ -461,27 +538,37 @@ const loadData = async () => {
     const userId = authStore.user?.id
 
     // Load all data in parallel
-    const [summaryData, monthly, expenseCat, incomeCat, currencyStat] = await Promise.all([
+    const [
+      summaryData,
+      monthlyUsd,
+      monthlyCdf,
+      expenseAll,
+      expenseUsd,
+      expenseCdf,
+      incomeUsd,
+      incomeCdf,
+      currencyStat,
+    ] = await Promise.all([
       getStatisticsSummary(userId),
-      getMonthlyStatistics(userId, selectedPeriod.value),
+      getMonthlyStatistics(userId, selectedPeriod.value, 'USD'),
+      getMonthlyStatistics(userId, selectedPeriod.value, 'CDF'),
       getCategoryStatistics(userId, 'expense'),
-      getCategoryStatistics(userId, 'income'),
+      getCategoryStatistics(userId, 'expense', 'USD'),
+      getCategoryStatistics(userId, 'expense', 'CDF'),
+      getCategoryStatistics(userId, 'income', 'USD'),
+      getCategoryStatistics(userId, 'income', 'CDF'),
       getCurrencyStatistics(userId),
     ])
 
     summary.value = summaryData
-    monthlyData.value = monthly
-    expenseCategories.value = expenseCat
-    incomeCategories.value = incomeCat
+    monthlyDataUSD.value = monthlyUsd
+    monthlyDataCDF.value = monthlyCdf
+    expenseCategories.value = expenseAll
+    expenseCategoriesUSD.value = expenseUsd
+    expenseCategoriesCDF.value = expenseCdf
+    incomeCategoriesUSD.value = incomeUsd
+    incomeCategoriesCDF.value = incomeCdf
     currencyStats.value = currencyStat
-
-    console.log('Data loaded:', {
-      summary: summaryData,
-      monthlyCount: monthly.length,
-      expenseCatCount: expenseCat.length,
-      incomeCatCount: incomeCat.length,
-      currencyStatsCount: currencyStat.length,
-    })
 
     // Wait for DOM to be ready
     await nextTick()
@@ -497,29 +584,15 @@ const loadData = async () => {
 }
 
 const renderCharts = () => {
-  console.log('renderCharts called', {
-    monthlyChartRef: !!monthlyChartRef.value,
-    expensePieChartRef: !!expensePieChartRef.value,
-    currencyChartRef: !!currencyChartRef.value,
-    monthlyDataLength: monthlyData.value.length,
-    expenseCategoriesLength: expenseCategories.value.length,
-    hasCurrencyData: hasCurrencyData.value,
-  })
   renderMonthlyChart()
   renderExpensePieChart()
   renderCurrencyChart()
 }
 
 const renderMonthlyChart = () => {
-  if (!monthlyChartRef.value) {
-    console.log('Monthly chart ref not available')
-    return
-  }
+  if (!monthlyChartRef.value) return
 
-  if (monthlyData.value.length === 0) {
-    console.log('No monthly data')
-    return
-  }
+  if (currentMonthlyData.value.length === 0) return
 
   // Destroy existing chart
   if (monthlyChart) {
@@ -527,26 +600,23 @@ const renderMonthlyChart = () => {
   }
 
   const ctx = monthlyChartRef.value.getContext('2d')
-  if (!ctx) {
-    console.log('Could not get 2d context')
-    return
-  }
+  if (!ctx) return
 
   const config: ChartConfiguration = {
     type: 'bar',
     data: {
-      labels: monthlyData.value.map((d) => d.month),
+      labels: currentMonthlyData.value.map((d) => d.month),
       datasets: [
         {
-          label: 'Revenus',
-          data: monthlyData.value.map((d) => d.income),
+          label: `Revenus (${monthlyCurrencyTab.value})`,
+          data: currentMonthlyData.value.map((d) => d.income),
           backgroundColor: 'rgba(25, 135, 84, 0.8)',
           borderColor: 'rgb(25, 135, 84)',
           borderWidth: 1,
         },
         {
-          label: 'Dépenses',
-          data: monthlyData.value.map((d) => d.expense),
+          label: `Dépenses (${monthlyCurrencyTab.value})`,
+          data: currentMonthlyData.value.map((d) => d.expense),
           backgroundColor: 'rgba(220, 53, 69, 0.8)',
           borderColor: 'rgb(220, 53, 69)',
           borderWidth: 1,
@@ -577,7 +647,12 @@ const renderMonthlyChart = () => {
           ticks: {
             callback: function (value: string | number) {
               if (typeof value === 'number') {
-                return value.toLocaleString('fr-FR') + ' $'
+                return new Intl.NumberFormat('fr-FR', {
+                  style: 'currency',
+                  currency: monthlyCurrencyTab.value,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(value)
               }
               return value
             },
@@ -588,31 +663,21 @@ const renderMonthlyChart = () => {
   }
 
   monthlyChart = new Chart(ctx, config)
-  console.log('Monthly chart created successfully')
 }
 
 const renderExpensePieChart = () => {
-  if (!expensePieChartRef.value) {
-    console.log('Expense pie chart ref not available')
-    return
-  }
+  if (!expensePieChartRef.value) return
 
-  if (expenseCategories.value.length === 0) {
-    console.log('No expense categories')
-    return
-  }
+  if (currentExpensePieCategories.value.length === 0) return
 
   if (expensePieChart) {
     expensePieChart.destroy()
   }
 
   const ctx = expensePieChartRef.value.getContext('2d')
-  if (!ctx) {
-    console.log('Could not get 2d context for pie chart')
-    return
-  }
+  if (!ctx) return
 
-  const topCategories = expenseCategories.value.slice(0, 5)
+  const topCategories = currentExpensePieCategories.value.slice(0, 5)
   const colors = [
     'rgba(220, 53, 69, 0.8)',
     'rgba(255, 193, 7, 0.8)',
@@ -647,7 +712,13 @@ const renderExpensePieChart = () => {
             label: function (context: { label?: string; parsed?: number }) {
               const label = context.label || ''
               const value = context.parsed || 0
-              return label + ': ' + value.toLocaleString('fr-FR') + ' $'
+              const formatted = new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: expensePieCurrencyTab.value,
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(value)
+              return label + ': ' + formatted
             },
           },
         },
@@ -656,31 +727,21 @@ const renderExpensePieChart = () => {
   }
 
   expensePieChart = new Chart(ctx, config)
-  console.log('Expense pie chart created successfully')
 }
 
 const renderCurrencyChart = () => {
-  if (!currencyChartRef.value) {
-    console.log('Currency chart ref not available')
-    return
-  }
+  if (!currencyChartRef.value) return
 
   // Check if there's any transaction data
   const hasData = currencyStats.value.some((stat) => stat.totalIncome > 0 || stat.totalExpense > 0)
-  if (!hasData) {
-    console.log('No currency transaction data')
-    return
-  }
+  if (!hasData) return
 
   if (currencyChart) {
     currencyChart.destroy()
   }
 
   const ctx = currencyChartRef.value.getContext('2d')
-  if (!ctx) {
-    console.log('Could not get 2d context for currency chart')
-    return
-  }
+  if (!ctx) return
 
   const config: ChartConfiguration = {
     type: 'bar',
@@ -727,11 +788,18 @@ const renderCurrencyChart = () => {
   }
 
   currencyChart = new Chart(ctx, config)
-  console.log('Currency chart created successfully')
 }
 
 watch(selectedPeriod, () => {
   loadData()
+})
+
+watch(monthlyCurrencyTab, () => {
+  renderMonthlyChart()
+})
+
+watch(expensePieCurrencyTab, () => {
+  renderExpensePieChart()
 })
 
 onMounted(() => {
