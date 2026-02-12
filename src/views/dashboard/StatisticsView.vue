@@ -14,6 +14,7 @@
             </div>
             <div class="d-flex gap-2">
               <select class="form-select" v-model="selectedPeriod" @change="loadData">
+                <option value="1">1 dernier mois</option>
                 <option value="3">3 derniers mois</option>
                 <option value="6">6 derniers mois</option>
                 <option value="12">12 derniers mois</option>
@@ -45,10 +46,12 @@
                   <span class="badge bg-primary-subtle text-primary">Total</span>
                 </div>
                 <h6 class="text-muted mb-2">Solde net</h6>
-                <h3 class="fw-bold mb-2">{{ formatCurrency(summary.netBalanceUSD, 'USD') }}</h3>
-                <p class="text-muted small mb-0">
-                  {{ formatCurrency(summary.netBalanceCDF, 'CDF') }}
-                </p>
+                <div class="d-flex flex-column justify-content-start align-items-end">
+                  <span class="fw-bold">{{ formatCurrency(summary.netBalanceUSD, 'USD') }}</span>
+                  <span class="fw-bold">
+                    {{ formatCurrency(summary.netBalanceCDF, 'CDF') }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -63,10 +66,12 @@
                   <span class="badge bg-success-subtle text-success">Revenus</span>
                 </div>
                 <h6 class="text-muted mb-2">Total des revenus</h6>
-                <h3 class="fw-bold mb-2">{{ formatCurrency(summary.totalIncomeUSD, 'USD') }}</h3>
-                <p class="text-muted small mb-0">
-                  {{ formatCurrency(summary.totalIncomeCDF, 'CDF') }}
-                </p>
+                <div class="d-flex flex-column justify-content-start align-items-end">
+                  <span class="fw-bold">{{ formatCurrency(summary.totalIncomeUSD, 'USD') }}</span>
+                  <span class="fw-bold">
+                    {{ formatCurrency(summary.totalIncomeCDF, 'CDF') }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -81,10 +86,12 @@
                   <span class="badge bg-danger-subtle text-danger">Dépenses</span>
                 </div>
                 <h6 class="text-muted mb-2">Total des dépenses</h6>
-                <h3 class="fw-bold mb-2">{{ formatCurrency(summary.totalExpenseUSD, 'USD') }}</h3>
-                <p class="text-muted small mb-0">
-                  {{ formatCurrency(summary.totalExpenseCDF, 'CDF') }}
-                </p>
+                <div class="d-flex flex-column justify-content-start align-items-end">
+                  <span class="fw-bold">{{ formatCurrency(summary.totalExpenseUSD, 'USD') }}</span>
+                  <span class="fw-bold">
+                    {{ formatCurrency(summary.totalExpenseCDF, 'CDF') }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
